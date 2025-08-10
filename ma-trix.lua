@@ -1,10 +1,9 @@
----matrix mixer for crow and norns
 --
--- E1 select a column
--- E2 and E2 adjust gain
 --
--- It's a bipolar
--- attenuverter actually.
+--   e2      m ◉◉◉◉
+--   e3      a ◉◉◉◉
+--   e1       ` t r i x
+--
 --
 -- by xmacex
 
@@ -34,7 +33,7 @@ end
 
 function init_crow()
    P.discovered = function() bang_params_to_public() end
-   norns.crow.loadscript('matrixmixer.lua')
+   norns.crow.loadscript('ma-trix.lua')
 end
 
 function init_ui()
@@ -70,7 +69,7 @@ function init_params()
 end
 
 function init_param_values()
-   -- match those in crow/matrixmixer.lua to avoid confusion
+   -- match those in crow/ma-trix.lua to avoid confusion
    params:set(amppid(1, 1), 0.3)
    params:set(amppid(2, 1), 0.3)
 end
