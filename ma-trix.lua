@@ -10,11 +10,14 @@
 UI = require('ui')
 P  = norns.crow.public
 
-local WIDTH  = 128
-local HEIGHT = 64
+local WIDTH    = 128
+local HEIGHT   = 64
 
 local NINPUTS  = 2
 local NOUTPUTS = 4
+
+local CTRLSIZE = WIDTH/NOUTPUTS
+local DIALSIZE = CTRLSIZE/3*2
 
 local dials = nil
 local selected_col = 1
@@ -41,7 +44,9 @@ function init_ui()
    dials = {{}, {}}
    for row=1,NINPUTS do
       for column=1,NOUTPUTS do
-	 local dial = UI.Dial.new(-30+column*30, -30+row*30, 20,
+	 local x = CTRLSIZE*(column-1)
+	 local y = CTRLSIZE*(row-1)+3
+	 local dial = UI.Dial.new(x, y, DIALSIZE,
 				  0, -1, 1,
 				  0, 0, {0},
 				  nil, row.."→"..column)
