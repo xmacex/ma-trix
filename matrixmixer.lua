@@ -23,14 +23,15 @@ local selected_col = 1
 
 function init()
    crow.add = init_crow
-
-   init_crow()
    init_ui()
    init_params()
    init_param_values()
+
+   init_crow()
 end
 
 function init_crow()
+   norns.crow.public.discovered = function() bind_params_to_crowp() end
    norns.crow.loadscript('matrixmixer.lua')
 end
 
@@ -42,6 +43,7 @@ function init_ui()
 				  0, -1, 1,
 				  0, 0, {0},
 				  nil, row.."→"..column)
+	 if column ~= selected_col then dial.active = false end
 	 table.insert(dials[row], dial)
       end
    end
@@ -51,15 +53,15 @@ function init_ui()
 end
 
 function init_params()
+   print("no. of public params: "..norns.crow.public.get_count())
    for row=1,NINPUTS do
       for column=1,NOUTPUTS do
-	 params:add_control('amp_'..row..'_'..column, row.."→"..column, controlspec.BIPOLAR)
-	 params:set_action('amp_'..row..'_'..column, function(v)
+	 local pid = amppid(row, column)
+	 params:add_control(pid, row.."→"..column, controlspec.BIPOLAR)
+	 params:set_action(pid, function(v)
 			      dials[row][column]:set_value(v)
 			      redraw() -- FIXME metro instead?
-			      -- FIXME why the following give me trouble? Is it because discovery is not done yet? Maybe not run init_param_values() in init becase that'll try to touch them.
-			      -- norns.crow.public.delta(row, selected_col, true)
-			      -- norns.crow.public.delta(row, v, false)
+			      -- Note: crow binding is done separately
 	 end)
       end
    end
@@ -67,8 +69,39 @@ end
 
 function init_param_values()
    -- match those in crow/matrixmixer.lua
-   params:set('amp_1_1', 0.3)
-   params:set('amp_2_1', 0.3)
+   params:set(amppid(1, 1), 0.3)
+   params:set(amppid(2, 1), 0.3)
+end
+
+function bind_params_to_crowp()
+   assert(norns.crow.public._params[1].name == "ch1")
+   assert(norns.crow.public._params[2].name == "ch2")
+   print("Discovered! binding params to crow public now")
+   for row=1,NINPUTS do
+      for column=1,NOUTPUTS do
+	 local pid = amppid(row, column)
+	 params:set_action(pid, function(v)
+			      dials[row][column]:set_value(v)
+			      redraw() -- FIXME metro instead?
+			      norns.crow.public.update("ch"..row, v, selected_col) -- I wish this was enough...
+			      norns.crow.public.io['ch'..row] = norns.crow.public._params[row].val -- but we need to force update on remote using the low-level metamethod... or something I'm confused
+	 end)
+      end
+   end
+   --- TODO bang params to crow publics
+   bang_params_to_public()
+end
+
+function bang_params_to_public()
+   for row=1,NINPUTS do
+      for column=1,NOUTPUTS do
+	 local pid = amppid(row, column)
+	 print("banging "..amppid(row, column).."="..params:get(pid))
+	 -- norns.crow.public.update(row, column, true)
+	 -- norns.crow.public.update(row, params:get(pid), false)
+	 norns.crow.public.update("ch"..row, params:get(pid), column)
+      end
+   end
 end
 
 --- UI/screen
@@ -78,11 +111,6 @@ function redraw()
    screen.fill()
    for row=1,NINPUTS do
       for column=1,NOUTPUTS do
-	 if column == selected_col then
-	    dials[row][column].active = true
-	 else
-	    dials[row][column].active = false
-	 end
 	 dials[row][column]:redraw()
       end
    end
@@ -95,17 +123,41 @@ function enc(n, d)
    if n == 1 then
       selected_col = util.wrap(selected_col+d, 1, NOUTPUTS)
       if norns.crow.public.get_count() == 2 then -- TODO more precise check that crow is ready
-	 norns.crow.public.update(1, selected_col, true)
-	 norns.crow.public.update(2, selected_col, true)
+	 for column=1,NINPUTS do
+	    -- for use wi the delta methods, which works in pair
+	    norns.crow.public.delta(column, selected_col, true)
+	 end
+      end
+      for row=1,NINPUTS do
+	 for column=1,NOUTPUTS do
+	    if column == selected_col then
+	       dials[row][column].active = true
+	    else
+	       dials[row][column].active = false
+	    end
+	    dials[row][column]:redraw()
+	 end
       end
       redraw()
    else
-      params:delta('amp_'..(n-1)..'_'..selected_col, d)
-      if norns.crow.public.get_count() == 2 then -- TODO more precise check that crow is ready
-	 norns.crow.public.delta(n-1, d, false) -- FIXME this should be in the param action, not here.
-      end
+      local pid = amppid(n-1, selected_col)
+      params:delta(pid, d)
    end
 end
+
+function amppid(c, r)
+   return "amp_"..c.."_"..r
+end
+
+function amppname(c, r)
+   return "amp "..c.."→"..r
+end
+
+-- for dev convenience
+function pvals(row)
+   tab.print(norns.crow.public._params[row].val)
+end
+   
 
 -- Local Variables:
 -- flycheck-luacheck-standards: ("lua51" "norns")
