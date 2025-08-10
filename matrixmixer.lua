@@ -9,6 +9,7 @@
 -- by xmacex
 
 UI = require('ui')
+P  = norns.crow.public
 
 local WIDTH  = 128
 local HEIGHT = 64
@@ -31,7 +32,7 @@ function init()
 end
 
 function init_crow()
-   norns.crow.public.discovered = function() bind_params_to_crowp() end
+   P.discovered = function() bind_params_to_crowp() end
    norns.crow.loadscript('matrixmixer.lua')
 end
 
@@ -53,7 +54,6 @@ function init_ui()
 end
 
 function init_params()
-   print("no. of public params: "..norns.crow.public.get_count())
    for row=1,NINPUTS do
       for column=1,NOUTPUTS do
 	 local pid = amppid(row, column)
@@ -74,8 +74,8 @@ function init_param_values()
 end
 
 function bind_params_to_crowp()
-   assert(norns.crow.public._params[1].name == "ch1")
-   assert(norns.crow.public._params[2].name == "ch2")
+   assert(P._params[1].name == "ch1")
+   assert(P._params[2].name == "ch2")
    print("Discovered! binding params to crow public now")
    for row=1,NINPUTS do
       for column=1,NOUTPUTS do
@@ -83,8 +83,8 @@ function bind_params_to_crowp()
 	 params:set_action(pid, function(v)
 			      dials[row][column]:set_value(v)
 			      redraw() -- FIXME metro instead?
-			      norns.crow.public.update("ch"..row, v, selected_col) -- I wish this was enough...
-			      norns.crow.public.io['ch'..row] = norns.crow.public._params[row].val -- but we need to force update on remote using the low-level metamethod... or something I'm confused
+			      P.update("ch"..row, v, selected_col) -- I wish this was enough...
+			      P.io['ch'..row] = P._params[row].val -- but we need to force update on remote using the low-level metamethod... or something I'm confused
 	 end)
       end
    end
@@ -96,10 +96,9 @@ function bang_params_to_public()
    for row=1,NINPUTS do
       for column=1,NOUTPUTS do
 	 local pid = amppid(row, column)
-	 print("banging "..amppid(row, column).."="..params:get(pid))
-	 -- norns.crow.public.update(row, column, true)
-	 -- norns.crow.public.update(row, params:get(pid), false)
-	 norns.crow.public.update("ch"..row, params:get(pid), column)
+	 print("banging "..amppname(row, column).." = "..params:get(pid))
+	 P.update("ch"..row, params:get(pid), column)
+	 P.io['ch'..row] = P._params[row].val -- I wish this wasn't necessary
       end
    end
 end
@@ -122,10 +121,10 @@ end
 function enc(n, d)
    if n == 1 then
       selected_col = util.wrap(selected_col+d, 1, NOUTPUTS)
-      if norns.crow.public.get_count() == 2 then -- TODO more precise check that crow is ready
+      if P.get_count() == 2 then -- TODO more precise check that crow is ready
 	 for column=1,NINPUTS do
 	    -- for use wi the delta methods, which works in pair
-	    norns.crow.public.delta(column, selected_col, true)
+	    P.delta(column, selected_col, true)
 	 end
       end
       for row=1,NINPUTS do
@@ -155,7 +154,7 @@ end
 
 -- for dev convenience
 function pvals(row)
-   tab.print(norns.crow.public._params[row].val)
+   tab.print(P._params[row].val)
 end
    
 
