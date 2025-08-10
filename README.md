@@ -2,7 +2,7 @@
 
 Matrix mixer for crow+norns
 
-![](matrixmixer.git)
+![](matrixmixer.gif)
 
     → ⎲⊘⊘⊘⊘
     → ⎳⊘⊘⊘⊘
