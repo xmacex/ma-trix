@@ -1,13 +1,10 @@
 ---matrix mixer for crow and norns
 --
--- → 1
--- → 2
---   1 →
---   2 →
---   3 →
---   4 →
+-- E1 select a column
+-- E2 and E2 adjust gain
 --
---
+-- It's a bipolar
+-- attenuverter actually.
 --
 -- by xmacex
 
