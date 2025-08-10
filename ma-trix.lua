@@ -43,14 +43,14 @@ function init_ui()
    -- create dials
    dials = {{}, {}}
    for row=1,NINPUTS do
-      for column=1,NOUTPUTS do
-	 local x = CTRLSIZE*(column-1)
+      for col=1,NOUTPUTS do
+	 local x = CTRLSIZE*(col-1)
 	 local y = CTRLSIZE*(row-1)+3
 	 local dial = UI.Dial.new(x, y, DIALSIZE,
 				  0, -1, 1,
 				  0, 0, {0},
-				  nil, row.."→"..column)
-	 if column ~= selected_col then dial.active = false end
+				  nil, row.."→"..col)
+	 if col ~= selected_col then dial.active = false end
 	 table.insert(dials[row], dial)
       end
    end
@@ -58,11 +58,11 @@ end
 
 function init_params()
    for row=1,NINPUTS do
-      for column=1,NOUTPUTS do
-	 local pid = amppid(row, column)
-	 params:add_control(pid, row.."→"..column, controlspec.BIPOLAR)
+      for col=1,NOUTPUTS do
+	 local pid = amppid(row, col)
+	 params:add_control(pid, row.."→"..col, controlspec.BIPOLAR)
 	 params:set_action(pid, function(v)
-			      dials[row][column]:set_value(v)
+			      dials[row][col]:set_value(v)
 			      redraw()
 			      if discovered() then
 				 P.update("ch"..row, v, selected_col) -- I wish this was enough...
@@ -83,10 +83,10 @@ function bang_params_to_public()
    -- update the status on crow to match norns params
    assert(discovered())
    for row=1,NINPUTS do
-      for column=1,NOUTPUTS do
-	 local pid = amppid(row, column)
-	 print("banging "..amppname(row, column).." = "..params:get(pid))
-	 P.update("ch"..row, params:get(pid), column)
+      for col=1,NOUTPUTS do
+	 local pid = amppid(row, col)
+	 print("banging "..amppname(row, col).." = "..params:get(pid))
+	 P.update("ch"..row, params:get(pid), col)
 	 P.io['ch'..row] = P._params[row].val -- I wish this wasn't necessary
       end
    end
@@ -103,8 +103,8 @@ end
 
 function redraw_dials()
    for row=1,NINPUTS do
-      for column=1,NOUTPUTS do
-	 dials[row][column]:redraw()
+      for col=1,NOUTPUTS do
+	 dials[row][col]:redraw()
       end
    end
 end
@@ -113,25 +113,25 @@ end
 
 function enc(n, d)
    if n == 1 then
-      -- select column with e1
+      -- select col with e1
       selected_col = util.wrap(selected_col+d, 1, NOUTPUTS)
       -- for use wi the delta methods, which works in pair with it's third parameter. It's a bit confusing.
       -- if discovered() then
-      -- 	 for column=1,NINPUTS do
+      -- 	 for col=1,NINPUTS do
 
-      -- 	    P.delta(column, selected_col, true)
+      -- 	    P.delta(col, selected_col, true)
       -- 	 end
       -- end
 
-      -- set dials of the selected column active
+      -- set dials of the selected col active
       for row=1,NINPUTS do
-	 for column=1,NOUTPUTS do
-	    if column == selected_col then
-	       dials[row][column].active = true
+	 for col=1,NOUTPUTS do
+	    if col == selected_col then
+	       dials[row][col].active = true
 	    else
-	       dials[row][column].active = false
+	       dials[row][col].active = false
 	    end
-	    dials[row][column]:redraw()
+	    dials[row][col]:redraw()
 	 end
       end
       redraw()
