@@ -118,7 +118,6 @@ function enc(n, d)
       -- for use wi the delta methods, which works in pair with it's third parameter. It's a bit confusing.
       -- if discovered() then
       -- 	 for col=1,NINPUTS do
-
       -- 	    P.delta(col, selected_col, true)
       -- 	 end
       -- end
