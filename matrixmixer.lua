@@ -32,7 +32,7 @@ function init()
 end
 
 function init_crow()
-   P.discovered = function() bind_params_to_crowp() end
+   P.discovered = function() bang_params_to_public() end
    norns.crow.loadscript('matrixmixer.lua')
 end
 
@@ -48,9 +48,6 @@ function init_ui()
 	 table.insert(dials[row], dial)
       end
    end
-   -- FIXME why this not work? Is redraw now defined yet?
-   -- ui_m = metro.init(redraw, 1/15)
-   -- ui_m:start()
 end
 
 function init_params()
@@ -60,36 +57,20 @@ function init_params()
 	 params:add_control(pid, row.."→"..column, controlspec.BIPOLAR)
 	 params:set_action(pid, function(v)
 			      dials[row][column]:set_value(v)
-			      redraw() -- FIXME metro instead?
-			      -- Note: crow binding is done separately
+			      redraw()
+			      if discovered() then
+				 P.update("ch"..row, v, selected_col) -- I wish this was enough...
+				 P.io['ch'..row] = P._params[row].val -- but we need to force update on remote using the low-level metamethod... or something I'm confused
+			      end
 	 end)
       end
    end
 end
 
 function init_param_values()
-   -- match those in crow/matrixmixer.lua
+   -- match those in crow/matrixmixer.lua to avoid confusion
    params:set(amppid(1, 1), 0.3)
    params:set(amppid(2, 1), 0.3)
-end
-
-function bind_params_to_crowp()
-   assert(P._params[1].name == "ch1")
-   assert(P._params[2].name == "ch2")
-   print("Discovered! binding params to crow public now")
-   for row=1,NINPUTS do
-      for column=1,NOUTPUTS do
-	 local pid = amppid(row, column)
-	 params:set_action(pid, function(v)
-			      dials[row][column]:set_value(v)
-			      redraw() -- FIXME metro instead?
-			      P.update("ch"..row, v, selected_col) -- I wish this was enough...
-			      P.io['ch'..row] = P._params[row].val -- but we need to force update on remote using the low-level metamethod... or something I'm confused
-	 end)
-      end
-   end
-   --- TODO bang params to crow publics
-   bang_params_to_public()
 end
 
 function bang_params_to_public()
@@ -150,6 +131,15 @@ end
 
 function amppname(c, r)
    return "amp "..c.."→"..r
+end
+
+function discovered()
+   -- assert(
+   --    P.get_count() == 2 -- sadface no early return in Lua I think
+   --    and P._params[1].name == "ch1"
+   --    and P._params[2].name == "ch2"
+   -- )
+   return P.get_count() == 2
 end
 
 -- for dev convenience
