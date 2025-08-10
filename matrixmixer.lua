@@ -16,10 +16,8 @@ local HEIGHT = 64
 local NINPUTS  = 2
 local NOUTPUTS = 4
 
-selected_col = 1
-
--- FREQ = 1/555
-FREQ = 1/15
+local dials = nil
+local selected_col = 1
 
 --- Init
 
@@ -40,7 +38,6 @@ function init_ui()
    dials = {{}, {}}
    for row=1,NINPUTS do
       for column=1,NOUTPUTS do
-	 -- local dial = UI.Dial.new(column*WIDTH/4*0.75, row*20-10, 15,
 	 local dial = UI.Dial.new(-30+column*30, -30+row*30, 20,
 				  0, -1, 1,
 				  0, 0, {0},
@@ -60,7 +57,7 @@ function init_params()
 	 params:set_action('amp_'..row..'_'..column, function(v)
 			      dials[row][column]:set_value(v)
 			      redraw() -- FIXME metro instead?
-			      -- FIXME why the following give me trouble? Is it because discovery is not done yet?
+			      -- FIXME why the following give me trouble? Is it because discovery is not done yet? Maybe not run init_param_values() in init becase that'll try to touch them.
 			      -- norns.crow.public.delta(row, selected_col, true)
 			      -- norns.crow.public.delta(row, v, false)
 	 end)
@@ -101,6 +98,7 @@ function enc(n, d)
 	 norns.crow.public.update(1, selected_col, true)
 	 norns.crow.public.update(2, selected_col, true)
       end
+      redraw()
    else
       params:delta('amp_'..(n-1)..'_'..selected_col, d)
       if norns.crow.public.get_count() == 2 then -- TODO more precise check that crow is ready
@@ -108,3 +106,7 @@ function enc(n, d)
       end
    end
 end
+
+-- Local Variables:
+-- flycheck-luacheck-standards: ("lua51" "norns")
+-- End:
