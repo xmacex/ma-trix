@@ -19,7 +19,8 @@ local NOUTPUTS = 4
 local CTRLSIZE = WIDTH/NOUTPUTS
 local DIALSIZE = CTRLSIZE/3*2
 
-local dials = nil
+local bgimg        = nil
+local dials        = nil
 local selected_col = 1
 
 --- Init
@@ -40,11 +41,12 @@ function init_crow()
 end
 
 function init_ui()
+   bgimg = screen.load_png(paths.this.path..'texture.png')
    -- create dials
    dials = {{}, {}}
    for row=1,NINPUTS do
       for col=1,NOUTPUTS do
-	 local x = CTRLSIZE*(col-1)
+	 local x = CTRLSIZE*(col-1)+5
 	 local y = CTRLSIZE*(row-1)+3
 	 local dial = UI.Dial.new(x, y, DIALSIZE,
 				  0, -1, 1,
@@ -71,6 +73,7 @@ function init_params()
 	 end)
       end
    end
+   params:add_binary('draw_bgimg', "draw background", 'toggle', 1)
 end
 
 function init_param_values()
@@ -96,7 +99,11 @@ end
 
 function redraw()
    screen.clear()
+   screen.blend_mode("add")
    screen.fill()
+   if params:get('draw_bgimg') == 1 then
+      screen.display_image(bgimg, 0, 0)
+   end
    redraw_dials()
    screen.update()
 end
